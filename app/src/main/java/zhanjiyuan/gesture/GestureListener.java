@@ -7,7 +7,11 @@ import android.view.MotionEvent;
  */
 public interface GestureListener {
 
-    public boolean onDown(MotionEvent ev);
+    public boolean clickOnce();
+
+    public boolean clickTwice();
 
     public boolean slipUp();
+
+    public boolean slipDown();
 }

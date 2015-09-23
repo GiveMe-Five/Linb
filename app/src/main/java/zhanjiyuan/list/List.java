@@ -6,6 +6,7 @@ import android.view.MotionEvent;
 
 import java.util.ArrayList;
 
+import zhanjiyuan.format.Datetime;
 import zhanjiyuan.gesture.GestureListener;
 import zhanjiyuan.item.Item;
 import zhanjiyuan.item.ItemMessage;
@@ -26,22 +27,44 @@ public class List extends Activity implements GestureListener{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //setContentView(R.layout.activity_main);
+        init();
+    }
+
+    private void init(){
+
     }
 
     /*
         列表的操作，例如上下滑动，越界检查以及动画的调用
      */
-    ArrayList<Item> itemArrayList = new ArrayList<Item>();
-    int index;
+    private ArrayList<Item> itemArrayList = new ArrayList<Item>();
+    private int index;
 
-    void nextItem(){
+    private void nextItem(){
         if (index + 1 >= itemArrayList.size()) overBottom();
-        else{
-            //switch effects
-            index++;
-        }
+        else index++;
     }
-    void overBottom(){
+    private void lastItem() {
+        if (index - 1 < 0) overTop();
+        else index--;
+    }
+    private void toBottom(){
+        if (itemArrayList.size() != 0) index = itemArrayList.size() - 1;
+        else emptyList();
+    }
+    private void toTop(){
+        if (itemArrayList.size() != 0) index = 0;
+        else emptyList();
+    }
+    private void overBottom(){
+        if (itemArrayList.size() != 0);
+        else emptyList();
+    }
+    private void overTop(){
+        if (itemArrayList.size() != 0);
+        else emptyList();
+    }
+    private void emptyList(){
 
     }
     /*
@@ -49,16 +72,28 @@ public class List extends Activity implements GestureListener{
         如前面所提及的，onDown属于Item，则调用Item类的函数
         滑动属于List，则调用List类也就是本身定义的函数，因为所有列表上下滑动的意义都相同，所以不必重写
      */
+
     @Override
-    public boolean onDown(MotionEvent ev) {
+    public boolean clickOnce() {
         //由各个继承抽象类Item的独特的Item自己定义实现，例如新闻的Message就代表播放
-        itemArrayList.get(index).onDown();
+        itemArrayList.get(index).clickOnce();
+        return true;
+    }
+
+    @Override
+    public boolean clickTwice() {
         return false;
     }
 
     @Override
     public boolean slipUp() {
         nextItem();
+        return true;
+    }
+
+    @Override
+    public boolean slipDown() {
+        lastItem();
         return true;
     }
 
@@ -69,7 +104,7 @@ public class List extends Activity implements GestureListener{
 
     Item fetchItem(){
         //fetch Item from server
-        return new ItemMessage();
+        return new ItemMessage("Title", "Content", new Datetime());
     }
 
     void addItem(){
@@ -84,8 +119,4 @@ public class List extends Activity implements GestureListener{
         也可以用来表示当前状态：例如红色代表Warning，绿色代表程序正常工作
         符号可以用来表示例如当前是播放状态的▶️，或是暂停状态的||
      */
-
-    void fun(){
-
-    }
 }

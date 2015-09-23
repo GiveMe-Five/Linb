@@ -5,6 +5,9 @@ package zhanjiyuan.item;
  */
 public abstract class Item {
 
-    public abstract boolean onDown();
+    public abstract boolean clickOnce();
 
+    public abstract boolean clickTwice();
+
+    public abstract boolean longPress();
 }
