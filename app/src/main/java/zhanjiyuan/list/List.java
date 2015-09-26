@@ -1,8 +1,8 @@
 package zhanjiyuan.list;
 
-import android.app.Activity;
+import android.app.ListActivity;
 import android.os.Bundle;
-import android.view.MotionEvent;
+import android.widget.ArrayAdapter;
 
 import java.util.ArrayList;
 
@@ -21,12 +21,16 @@ import zhanjiyuan.item.ItemMessage;
  * private protected还没写。。。
  */
 
-public class List extends Activity implements GestureListener{
+public class List extends ListActivity implements GestureListener{
+
+    private  static final String[] COUNTRIES=new String[]{"中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //setContentView(R.layout.activity_main);
+        setListAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,COUNTRIES));
+
         init();
     }
 
