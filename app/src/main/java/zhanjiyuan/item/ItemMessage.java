@@ -8,12 +8,10 @@ import zhanjiyuan.format.Datetime;
 public class ItemMessage extends Item {
 
     private String title, content;
-    private Datetime timestamp;
 
-    public ItemMessage(String title, String content, Datetime timestamp){
+    public ItemMessage(String title, String content){
         this.title = title;
         this.content = content;
-        this.timestamp = timestamp;
     }
     @Override
     public boolean clickOnce() {
@@ -27,7 +25,7 @@ public class ItemMessage extends Item {
     }
 
     @Override
-    public boolean longPress() {
-        return false;
+    public String getkeyInfo() {
+        return title;
     }
 }

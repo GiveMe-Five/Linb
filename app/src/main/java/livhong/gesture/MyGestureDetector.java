@@ -9,7 +9,7 @@ import android.view.ViewConfiguration;
 import android.widget.Toast;
 
 public class MyGestureDetector {
-    
+
     private int mTouchSlopSquare;
     private int mDoubleTapSlopSquare;
     private int mMinimumFlingVelocity;

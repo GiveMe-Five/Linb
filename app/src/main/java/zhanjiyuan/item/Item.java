@@ -9,5 +9,5 @@ public abstract class Item {
 
     public abstract boolean clickTwice();
 
-    public abstract boolean longPress();
+    public abstract String getkeyInfo();
 }

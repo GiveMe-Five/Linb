@@ -1,13 +1,16 @@
 package zhanjiyuan.list;
 
-import android.app.ListActivity;
+import android.app.Activity;
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
+import android.view.MotionEvent;
+import android.view.VelocityTracker;
+import android.widget.TextView;
+
+import com.example.zhanjiyuan.linb.R;
 
 import java.util.ArrayList;
 
-import zhanjiyuan.format.Datetime;
-import zhanjiyuan.gesture.GestureListener;
+import livhong.gesture.MyGestureDetector;
 import zhanjiyuan.item.Item;
 import zhanjiyuan.item.ItemMessage;
 
@@ -21,56 +24,80 @@ import zhanjiyuan.item.ItemMessage;
  * private protected还没写。。。
  */
 
-public class List extends ListActivity implements GestureListener{
+public class List extends Activity {
 
-    private  static final String[] COUNTRIES=new String[]{"中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利","中国","俄罗斯","英国","法国","意大利"};
+    //用于记录当前页面的item的列表
+    private ArrayList<Item> itemArrayList = new ArrayList<Item>();
+    private int index;
+    private double ruler;
+
+    //手势与速度侦测
+    private VelocityTracker vTracker = null;
+    private MyGestureDetector detector;
+
+    //显示当前所处的item内容
+    private TextView display, display_ruler;
+    private int slipRate = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //setContentView(R.layout.activity_main);
-        setListAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,COUNTRIES));
-
+        setContentView(R.layout.list_layout);
+        display = (TextView)findViewById(R.id.list_layout_text);
+        display_ruler = (TextView)findViewById(R.id.list_layout_ruler);
+        detector = new MyGestureDetector(getApplicationContext(), adapter);
         init();
     }
 
     private void init(){
-
+        //test
+        itemArrayList.add(new ItemMessage("firstpage", "content"));
+        itemArrayList.add(new ItemMessage("title1", "content"));
+        itemArrayList.add(new ItemMessage("title2", "content"));
+        itemArrayList.add(new ItemMessage("title3", "content"));
+        itemArrayList.add(new ItemMessage("title4", "content"));
+        itemArrayList.add(new ItemMessage("title5", "content"));
+        itemArrayList.add(new ItemMessage("title5", "content"));
+        itemArrayList.add(new ItemMessage("title6", "content"));
+        itemArrayList.add(new ItemMessage("title7", "content"));
+        itemArrayList.add(new ItemMessage("title8", "content"));
+        itemArrayList.add(new ItemMessage("title9", "content"));
+        itemArrayList.add(new ItemMessage("lastpage", "content"));
+        index = 0;
+        updateDisplay();
     }
-
     /*
         列表的操作，例如上下滑动，越界检查以及动画的调用
      */
-    private ArrayList<Item> itemArrayList = new ArrayList<Item>();
-    private int index;
 
-    private void nextItem(){
-        if (index + 1 >= itemArrayList.size()) overBottom();
-        else index++;
+    private void updateDisplay(){
+        if (index >= itemArrayList.size()) overBottom();
+        else display.setText("" + itemArrayList.get(index).getkeyInfo());
     }
-    private void lastItem() {
-        if (index - 1 < 0) overTop();
-        else index--;
-    }
+
     private void toBottom(){
+        System.out.println("toBottom");
         if (itemArrayList.size() != 0) index = itemArrayList.size() - 1;
         else emptyList();
     }
     private void toTop(){
+        System.out.println("toTop");
         if (itemArrayList.size() != 0) index = 0;
         else emptyList();
     }
     private void overBottom(){
-        if (itemArrayList.size() != 0);
+        System.out.println("overBottom");
+        if (itemArrayList.size() != 0){
+            index = itemArrayList.size() - 1;
+            ruler = index * slipRate;
+        }
         else emptyList();
     }
-    private void overTop(){
-        if (itemArrayList.size() != 0);
-        else emptyList();
-    }
-    private void emptyList(){
 
+    private void emptyList(){
+        display.setText("empty list");
     }
+
     /*
         监听器的设置以及实现手势接口的各个函数
         如前面所提及的，onDown属于Item，则调用Item类的函数
@@ -78,28 +105,36 @@ public class List extends ListActivity implements GestureListener{
      */
 
     @Override
-    public boolean clickOnce() {
-        //由各个继承抽象类Item的独特的Item自己定义实现，例如新闻的Message就代表播放
-        itemArrayList.get(index).clickOnce();
-        return true;
+    public boolean onTouchEvent(MotionEvent event){
+        int action = event.getAction();
+        switch(action){
+            case MotionEvent.ACTION_DOWN:
+                if(vTracker == null)
+                    vTracker = VelocityTracker.obtain();
+                else
+                    vTracker.clear();
+                vTracker.addMovement(event);
+                break;
+            case MotionEvent.ACTION_MOVE:
+                vTracker.addMovement(event);
+                vTracker.computeCurrentVelocity(100);
+                ruler -= vTracker.getYVelocity();
+                ruler = Math.max(ruler, 0);
+                display_ruler.setText("index: " + index + "\truler:" + ruler);
+                index = (int)(ruler / slipRate);
+                updateDisplay();
+                break;
+        }
+        return detector.onTouchEvent(event);
     }
 
-    @Override
-    public boolean clickTwice() {
-        return false;
-    }
-
-    @Override
-    public boolean slipUp() {
-        nextItem();
-        return true;
-    }
-
-    @Override
-    public boolean slipDown() {
-        lastItem();
-        return true;
-    }
+    ListGestureAdapter adapter = new ListGestureAdapter(){
+        @Override
+        public boolean onDown(MotionEvent ev){
+            System.out.println("Override");
+            return true;
+        }
+    };
 
     /*
         TODO: Service
@@ -108,7 +143,7 @@ public class List extends ListActivity implements GestureListener{
 
     Item fetchItem(){
         //fetch Item from server
-        return new ItemMessage("Title", "Content", new Datetime());
+        return new ItemMessage("Title", "Content");
     }
 
     void addItem(){
