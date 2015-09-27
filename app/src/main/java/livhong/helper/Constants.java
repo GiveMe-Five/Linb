@@ -5,6 +5,10 @@ package livhong.helper;
  */
 public class Constants {
 
+    //Network
     public final static String SERVER_IP = "http://dev.weixin.tunnel.mobi/NewsCrawler/";
 
+    //View Status DEMO
+    public final static String STATUS_PLAY = "res/...";
+    public final static String STATUS_PAUSE = "res/...";
 }
