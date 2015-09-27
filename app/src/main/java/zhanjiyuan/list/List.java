@@ -2,15 +2,31 @@ package zhanjiyuan.list;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.widget.TextView;
 
 import com.example.zhanjiyuan.linb.R;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 import livhong.gesture.MyGestureDetector;
+import livhong.helper.Constants;
 import zhanjiyuan.item.Item;
 import zhanjiyuan.item.ItemMessage;
 
@@ -39,6 +55,19 @@ public class List extends Activity {
     private TextView display, display_ruler;
     private int slipRate = 1000;
 
+    private Handler handler = new Handler() {
+        public void handleMessage(Message msg){
+            switch(msg.what){
+                case 0:
+                    fetchItem((String)msg.obj);
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +76,7 @@ public class List extends Activity {
         display_ruler = (TextView)findViewById(R.id.list_layout_ruler);
         detector = new MyGestureDetector(getApplicationContext(), adapter);
         init();
+        beginTofetchItem();
     }
 
     private void init(){
@@ -65,6 +95,7 @@ public class List extends Activity {
         itemArrayList.add(new ItemMessage("lastpage", "content"));
         index = 0;
         updateDisplay();
+        //beginTofetchItem();
     }
     /*
         列表的操作，例如上下滑动，越界检查以及动画的调用
@@ -141,14 +172,63 @@ public class List extends Activity {
         服务器的连接，以及自己去抓取新的信息加入List，每个List抓取内容应该是不同的，需要重写，这里只是给个例子
      */
 
-    Item fetchItem(){
+
+    void beginTofetchItem(){
+        new Thread(){
+
+            @Override
+            public void run(){
+
+                HttpClient httpClient = new DefaultHttpClient();
+                // replacße with your url
+                HttpPost httpPost = new HttpPost(Constants.SERVER_IP+"getNewsList");
+
+
+                //Post Data
+
+                java.util.List<NameValuePair> nameValuePair = new ArrayList<NameValuePair>(2);
+//                nameValuePair.add(new BasicNameValuePair("username", "test_user"));
+//                nameValuePair.add(new BasicNameValuePair("password", "123456789"));
+
+
+                //Encoding POST data
+                try {
+                    httpPost.setEntity(new UrlEncodedFormEntity(nameValuePair));
+                } catch (UnsupportedEncodingException e) {
+                    // log exception
+                    e.printStackTrace();
+                }
+
+                //making POST request.
+                try {
+                    HttpResponse response = httpClient.execute(httpPost);
+                    // write response to log
+//                    Log.d("Http Post Response:", response.toString());
+                    String json = EntityUtils.toString(response.getEntity());
+                    Message msg = new Message();
+                    msg.what = 0;//receive msg
+                    msg.obj = json;
+                    handler.sendMessage(msg);
+                } catch (ClientProtocolException e) {
+                    // Log exception
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    // Log exception
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+    }
+
+    Item fetchItem(String json){
+        System.out.println(json);
         //fetch Item from server
         return new ItemMessage("Title", "Content");
     }
 
-    void addItem(){
-        itemArrayList.add(fetchItem());
-    }
+//    void addItem(){
+//        itemArrayList.add(fetchItem());
+//    }
 
     /*
         各种翻页的动画之类的
@@ -158,4 +238,12 @@ public class List extends Activity {
         也可以用来表示当前状态：例如红色代表Warning，绿色代表程序正常工作
         符号可以用来表示例如当前是播放状态的▶️，或是暂停状态的||
      */
+
+    private void setBackground(){
+        //TODO
+    }
+
+    private void setStatus(){
+        //TODO
+    }
 }
