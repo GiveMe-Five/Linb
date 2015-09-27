@@ -11,7 +11,8 @@ public class ListGestureAdapter implements OnGestureListener {
 
     @Override
     public boolean onDown(MotionEvent ev) {
-        return false;
+        System.out.println("onDown");
+        return true;
     }
 
     @Override

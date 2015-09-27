@@ -6,8 +6,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import zhanjiyuan.list.List;
+import zhanjiyuan.module.NewsList;
 
-public class MainActivity extends List {
+public class MainActivity extends NewsList {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
