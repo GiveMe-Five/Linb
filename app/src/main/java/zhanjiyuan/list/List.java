@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.zhanjiyuan.linb.R;
@@ -37,16 +39,20 @@ public class List extends Activity {
     private ListGestureAdapter adapter = new ListGestureAdapter();
 
     //显示当前所处的item内容
-    private TextView display, display_ruler;
+    private TextView display_ruler;
     private int slipRate = 1000;
+
+    private LinearLayout listLayout;
+    private ImageView listImg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.list_layout);
-        display = (TextView)findViewById(R.id.list_layout_text);
         display_ruler = (TextView)findViewById(R.id.list_layout_ruler);
         detector = new MyGestureDetector(getApplicationContext(), adapter);
+        listLayout = (LinearLayout)findViewById(R.id.list_layout);
+        listImg = (ImageView)findViewById(R.id.list_img);
         init();
     }
 
@@ -66,6 +72,8 @@ public class List extends Activity {
         itemArrayList.add(new ItemMessage("lastpage", "content"));
         index = 0;
         updateDisplay();
+        setBackground();
+        setStatus();
     }
     /*
         列表的操作，例如上下滑动，越界检查以及动画的调用
@@ -73,7 +81,7 @@ public class List extends Activity {
 
     private void updateDisplay(){
         if (index >= itemArrayList.size()) overBottom();
-        else display.setText("" + itemArrayList.get(index).getkeyInfo());
+        //else display.setText("" + itemArrayList.get(index).getkeyInfo());
     }
 
     private void toBottom(){
@@ -96,7 +104,7 @@ public class List extends Activity {
     }
 
     private void emptyList(){
-        display.setText("empty list");
+        //display.setText("empty list");
     }
 
     /*
@@ -154,10 +162,10 @@ public class List extends Activity {
      */
 
     private void setBackground(){
-        //TODO
+        listLayout.setBackgroundColor(getResources().getColor(R.color.news_color));
     }
 
     private void setStatus(){
-        //TODO
+        listImg.setImageResource(R.drawable.play);
     }
 }
