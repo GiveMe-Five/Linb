@@ -1,4 +1,4 @@
-package livhong.gesture;
+package gesture;
 
 import android.view.MotionEvent;
 

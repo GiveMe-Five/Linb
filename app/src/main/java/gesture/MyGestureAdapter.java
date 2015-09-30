@@ -1,18 +1,15 @@
-package zhanjiyuan.list;
+package gesture;
 
 import android.view.MotionEvent;
-
-import livhong.gesture.OnGestureListener;
 
 /**
  * Created by zhanjiyuan on 15/9/26.
  */
-public class ListGestureAdapter implements OnGestureListener {
+public class MyGestureAdapter implements OnGestureListener {
 
     @Override
     public boolean onDown(MotionEvent ev) {
-        System.out.println("onDown");
-        return true;
+        return false;
     }
 
     @Override

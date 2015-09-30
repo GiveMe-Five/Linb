@@ -1,4 +1,4 @@
-package zhanjiyuan.module;
+package activity;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,14 +16,13 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
-import livhong.helper.Constants;
-import zhanjiyuan.item.Item;
-import zhanjiyuan.list.List;
+import helper.Constants;
+import module.ModuleList;
 
 /**
  * Created by zhanjiyuan on 15/9/27.
  */
-public class NewsList extends List {
+public class NewsActivity extends ModuleList {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -1,20 +1,24 @@
-package zhanjiyuan.list;
+package module;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
+import android.view.View;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageSwitcher;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.widget.RelativeLayout;
+import android.widget.ViewSwitcher.ViewFactory;
 
 import com.example.zhanjiyuan.linb.R;
 
 import java.util.ArrayList;
 
-import livhong.gesture.MyGestureDetector;
-import zhanjiyuan.item.Item;
-import zhanjiyuan.item.ItemMessage;
+import gesture.MyGestureAdapter;
+import gesture.MyGestureDetector;
+import item.Item;
+import item.ItemMessage;
 
 /**
  * Created by zhanjiyuan on 15/9/22.
@@ -26,7 +30,7 @@ import zhanjiyuan.item.ItemMessage;
  * private protected还没写。。。
  */
 
-public class List extends Activity {
+public class ModuleList extends Activity {
 
     //用于记录当前页面的item的列表
     private ArrayList<Item> itemArrayList = new ArrayList<Item>();
@@ -36,40 +40,39 @@ public class List extends Activity {
     //手势与速度侦测
     private VelocityTracker vTracker = null;
     private MyGestureDetector detector;
-    private ListGestureAdapter adapter = new ListGestureAdapter();
 
     //显示当前所处的item内容
-    private TextView display_ruler;
     private int slipRate = 1000;
 
-    private LinearLayout listLayout;
-    private ImageView listImg;
+    private RelativeLayout listLayout;
+    private ImageSwitcher imageswitcher;
+    private int[] imageList = {R.drawable.play, R.drawable.stop};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.list_layout);
-        display_ruler = (TextView)findViewById(R.id.list_layout_ruler);
         detector = new MyGestureDetector(getApplicationContext(), adapter);
-        listLayout = (LinearLayout)findViewById(R.id.list_layout);
-        listImg = (ImageView)findViewById(R.id.list_img);
+        listLayout = (RelativeLayout)findViewById(R.id.layout_list);
+        imageswitcher = (ImageSwitcher)findViewById(R.id.layout_list_image_switcher);
+        initImageSwitcher();
         init();
     }
 
     private void init(){
         //test
-        itemArrayList.add(new ItemMessage("firstpage", "content"));
-        itemArrayList.add(new ItemMessage("title1", "content"));
-        itemArrayList.add(new ItemMessage("title2", "content"));
-        itemArrayList.add(new ItemMessage("title3", "content"));
-        itemArrayList.add(new ItemMessage("title4", "content"));
-        itemArrayList.add(new ItemMessage("title5", "content"));
-        itemArrayList.add(new ItemMessage("title5", "content"));
-        itemArrayList.add(new ItemMessage("title6", "content"));
-        itemArrayList.add(new ItemMessage("title7", "content"));
-        itemArrayList.add(new ItemMessage("title8", "content"));
-        itemArrayList.add(new ItemMessage("title9", "content"));
-        itemArrayList.add(new ItemMessage("lastpage", "content"));
+//        itemArrayList.add(new ItemMessage("firstpage", "content"));
+//        itemArrayList.add(new ItemMessage("title1", "content"));
+//        itemArrayList.add(new ItemMessage("title2", "content"));
+//        itemArrayList.add(new ItemMessage("title3", "content"));
+//        itemArrayList.add(new ItemMessage("title4", "content"));
+//        itemArrayList.add(new ItemMessage("title5", "content"));
+//        itemArrayList.add(new ItemMessage("title5", "content"));
+//        itemArrayList.add(new ItemMessage("title6", "content"));
+//        itemArrayList.add(new ItemMessage("title7", "content"));
+//        itemArrayList.add(new ItemMessage("title8", "content"));
+//        itemArrayList.add(new ItemMessage("title9", "content"));
+//        itemArrayList.add(new ItemMessage("lastpage", "content"));
         index = 0;
         updateDisplay();
         setBackground();
@@ -104,7 +107,7 @@ public class List extends Activity {
     }
 
     private void emptyList(){
-        //display.setText("empty list");
+        //display.setText("empty moduleList");
     }
 
     /*
@@ -129,7 +132,6 @@ public class List extends Activity {
                 vTracker.computeCurrentVelocity(100);
                 ruler -= vTracker.getYVelocity();
                 ruler = Math.max(ruler, 0);
-                display_ruler.setText("index: " + index + "\truler:" + ruler);
                 index = (int)(ruler / slipRate);
                 updateDisplay();
                 break;
@@ -137,6 +139,18 @@ public class List extends Activity {
         return detector.onTouchEvent(event);
     }
 
+    private MyGestureAdapter adapter = new MyGestureAdapter(){
+
+        @Override
+        public boolean onDown(MotionEvent ev){
+            return itemArrayList.get(index).clickOnce();
+        }
+
+        @Override
+        public boolean onDoubleClick(MotionEvent ev){
+            return itemArrayList.get(index).clickTwice();
+        }
+    };
     /*
         TODO: Service
         服务器的连接，以及自己去抓取新的信息加入List，每个List抓取内容应该是不同的，需要重写，这里只是给个例子
@@ -166,6 +180,37 @@ public class List extends Activity {
     }
 
     private void setStatus(){
-        listImg.setImageResource(R.drawable.play);
+//        listImg.setImageResource(R.drawable.play);
+    }
+
+    public void initImageSwitcher(){
+        // 实现并设置工厂内部接口的makeView方法，用来显示视图。
+        imageswitcher.setFactory(new ViewFactory() {
+            public View makeView() {
+                return new ImageView(ModuleList.this);
+            }
+        });
+        // 设置当前图片
+        imageswitcher.setImageResource(imageList[index]);
+        // 设置切入动画
+        imageswitcher.setInAnimation(AnimationUtils.loadAnimation(getApplicationContext(),
+                android.R.anim.fade_in));
+        // 设置切出动画
+        imageswitcher.setOutAnimation(AnimationUtils.loadAnimation(
+                getApplicationContext(), android.R.anim.fade_out));
+
+        imageswitcher.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                setCurrentImage(1);
+            }
+        });
+    }
+
+    public void setCurrentImage(int index){
+        if (index >= 0 && index < imageList.length){
+            this.index = index;
+            imageswitcher.setImageResource(imageList[index]);
+        }
     }
 }

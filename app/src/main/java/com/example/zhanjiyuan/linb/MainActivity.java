@@ -1,14 +1,10 @@
 package com.example.zhanjiyuan.linb;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 
-import zhanjiyuan.list.List;
-import zhanjiyuan.module.NewsList;
+import activity.NewsActivity;
 
-public class MainActivity extends NewsList {
+public class MainActivity extends NewsActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
