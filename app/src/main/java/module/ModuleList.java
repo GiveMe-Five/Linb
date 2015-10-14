@@ -1,5 +1,8 @@
 package module;
 
+import android.animation.AnimatorInflater;
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -9,7 +12,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.ViewSwitcher.ViewFactory;
+import android.widget.ViewSwitcher;
 
 import com.example.zhanjiyuan.linb.R;
 
@@ -46,45 +49,40 @@ public class ModuleList extends Activity {
 
     private RelativeLayout listLayout;
     private ImageSwitcher imageswitcher;
-    private int[] imageList = {R.drawable.play, R.drawable.stop};
+    private ObjectAnimator objectAnimator_over_1, objectAnimator_over_2,
+                           objectAnimator_swift_1, objectAnimator_swift_2;
+    private boolean over_flag = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.list_layout);
-        detector = new MyGestureDetector(getApplicationContext(), adapter);
         listLayout = (RelativeLayout)findViewById(R.id.layout_list);
-        imageswitcher = (ImageSwitcher)findViewById(R.id.layout_list_image_switcher);
+
+        detector = new MyGestureDetector(getApplicationContext(), adapter);
+        initColorTran();
         initImageSwitcher();
-        init();
+
+        initData();
     }
 
-    private void init(){
-        //test
-//        itemArrayList.add(new ItemMessage("firstpage", "content"));
-//        itemArrayList.add(new ItemMessage("title1", "content"));
-//        itemArrayList.add(new ItemMessage("title2", "content"));
-//        itemArrayList.add(new ItemMessage("title3", "content"));
-//        itemArrayList.add(new ItemMessage("title4", "content"));
-//        itemArrayList.add(new ItemMessage("title5", "content"));
-//        itemArrayList.add(new ItemMessage("title5", "content"));
-//        itemArrayList.add(new ItemMessage("title6", "content"));
-//        itemArrayList.add(new ItemMessage("title7", "content"));
-//        itemArrayList.add(new ItemMessage("title8", "content"));
-//        itemArrayList.add(new ItemMessage("title9", "content"));
-//        itemArrayList.add(new ItemMessage("lastpage", "content"));
-        index = 0;
-        updateDisplay();
-        setBackground();
-        setStatus();
-    }
     /*
         列表的操作，例如上下滑动，越界检查以及动画的调用
      */
 
     private void updateDisplay(){
-        if (index >= itemArrayList.size()) overBottom();
-        //else display.setText("" + itemArrayList.get(index).getkeyInfo());
+        int pre_index = index;
+        index = (int)(ruler / slipRate);
+
+        if (ruler < 0) overTop();
+        else if (index >= itemArrayList.size()) overBottom();
+        else if (pre_index != index){
+            itemArrayList.get(index).autoRunEnd();
+            over_flag = false;
+            objectAnimator_swift_1.start();
+            objectAnimator_swift_2.start();
+            itemArrayList.get(index).autoRunBegin();
+        }
     }
 
     private void toBottom(){
@@ -97,7 +95,25 @@ public class ModuleList extends Activity {
         if (itemArrayList.size() != 0) index = 0;
         else emptyList();
     }
+    private void overTop(){
+        if (!over_flag) {
+            objectAnimator_over_1.start();
+            objectAnimator_over_2.start();
+            over_flag = true;
+        }
+        System.out.println("overTop");
+        if (itemArrayList.size() != 0) {
+            index = 0;
+            ruler = 0;
+        }
+        else emptyList();
+    }
     private void overBottom(){
+        if (!over_flag) {
+            objectAnimator_over_1.start();
+            objectAnimator_over_2.start();
+            over_flag = true;
+        }
         System.out.println("overBottom");
         if (itemArrayList.size() != 0){
             index = itemArrayList.size() - 1;
@@ -127,18 +143,18 @@ public class ModuleList extends Activity {
                     vTracker.clear();
                 vTracker.addMovement(event);
                 break;
+            case MotionEvent.ACTION_UP:
+                over_flag = false;
+                break;
             case MotionEvent.ACTION_MOVE:
                 vTracker.addMovement(event);
                 vTracker.computeCurrentVelocity(100);
                 ruler -= vTracker.getYVelocity();
-                ruler = Math.max(ruler, 0);
-                index = (int)(ruler / slipRate);
                 updateDisplay();
                 break;
         }
         return detector.onTouchEvent(event);
     }
-
     private MyGestureAdapter adapter = new MyGestureAdapter(){
 
         @Override
@@ -151,6 +167,8 @@ public class ModuleList extends Activity {
             return itemArrayList.get(index).clickTwice();
         }
     };
+
+
     /*
         TODO: Service
         服务器的连接，以及自己去抓取新的信息加入List，每个List抓取内容应该是不同的，需要重写，这里只是给个例子
@@ -175,42 +193,53 @@ public class ModuleList extends Activity {
         符号可以用来表示例如当前是播放状态的▶️，或是暂停状态的||
      */
 
-    private void setBackground(){
-        listLayout.setBackgroundColor(getResources().getColor(R.color.news_color));
-    }
-
-    private void setStatus(){
-//        listImg.setImageResource(R.drawable.play);
-    }
-
-    public void initImageSwitcher(){
-        // 实现并设置工厂内部接口的makeView方法，用来显示视图。
-        imageswitcher.setFactory(new ViewFactory() {
+    private void initImageSwitcher(){
+        imageswitcher = (ImageSwitcher)findViewById(R.id.layout_list_image_switcher);
+        imageswitcher.setFactory(new ViewSwitcher.ViewFactory() {
+            @Override
             public View makeView() {
                 return new ImageView(ModuleList.this);
             }
         });
-        // 设置当前图片
-        imageswitcher.setImageResource(imageList[index]);
-        // 设置切入动画
-        imageswitcher.setInAnimation(AnimationUtils.loadAnimation(getApplicationContext(),
-                android.R.anim.fade_in));
-        // 设置切出动画
-        imageswitcher.setOutAnimation(AnimationUtils.loadAnimation(
-                getApplicationContext(), android.R.anim.fade_out));
 
-        imageswitcher.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                setCurrentImage(1);
-            }
-        });
+        imageswitcher.setImageResource(0);
+        imageswitcher.setInAnimation(AnimationUtils.loadAnimation(getApplicationContext(), android.R.anim.fade_in));
+        imageswitcher.setOutAnimation(AnimationUtils.loadAnimation(getApplicationContext(), android.R.anim.fade_out));
     }
 
-    public void setCurrentImage(int index){
-        if (index >= 0 && index < imageList.length){
-            this.index = index;
-            imageswitcher.setImageResource(imageList[index]);
-        }
+    public void setCurrentImage(int res){
+        imageswitcher.setImageResource(res);
+    }
+
+    private void initColorTran(){
+        listLayout.setBackgroundColor(getResources().getColor(R.color.news_color));
+
+        objectAnimator_over_1 = (ObjectAnimator) AnimatorInflater.loadAnimator(ModuleList.this, R.animator.coloranimation_over_1);
+        objectAnimator_over_1.setEvaluator(new ArgbEvaluator());
+        objectAnimator_over_1.setTarget(listLayout);
+
+        objectAnimator_over_2 = (ObjectAnimator) AnimatorInflater.loadAnimator(ModuleList.this, R.animator.coloranimation_over_2);
+        objectAnimator_over_2.setEvaluator(new ArgbEvaluator());
+        objectAnimator_over_2.setTarget(listLayout);
+        objectAnimator_over_2.setStartDelay(200);
+
+        objectAnimator_swift_1 = (ObjectAnimator) AnimatorInflater.loadAnimator(ModuleList.this, R.animator.coloranimation_swift_1);
+        objectAnimator_swift_1.setEvaluator(new ArgbEvaluator());
+        objectAnimator_swift_1.setTarget(listLayout);
+
+        objectAnimator_swift_2 = (ObjectAnimator) AnimatorInflater.loadAnimator(ModuleList.this, R.animator.coloranimation_swift_2);
+        objectAnimator_swift_2.setEvaluator(new ArgbEvaluator());
+        objectAnimator_swift_2.setTarget(listLayout);
+        objectAnimator_swift_2.setStartDelay(200);
+    }
+
+    private void initData(){
+        itemArrayList.add(new ItemMessage(this, "我是标题一", "美丽的珍珠链历史的脊梁骨贯古今"));
+        itemArrayList.add(new ItemMessage(this, "我是标题二", "悄悄的我走了正如我悄悄的来"));
+        itemArrayList.add(new ItemMessage(this, "我是标题三", "春江潮水连海平海上明月共潮生"));
+        itemArrayList.add(new ItemMessage(this, "我是标题四", "随风奔跑自由是方向"));
+        itemArrayList.add(new ItemMessage(this, "我是标题五", "假如生活欺骗了你不要悲伤不要心急"));
+        itemArrayList.add(new ItemMessage(this, "我是标题六", "我们在哪里我在在干什么"));
+        itemArrayList.get(0).autoRunBegin();
     }
 }

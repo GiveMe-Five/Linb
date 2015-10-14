@@ -12,7 +12,7 @@ public class SoundManager {
 
     }
 
-    //播放声音（考虑用子线程？）
+    //播放声音
     public void playStream(){
 
     }
