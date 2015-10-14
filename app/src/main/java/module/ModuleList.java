@@ -4,7 +4,12 @@ import android.animation.AnimatorInflater;
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -18,10 +23,12 @@ import com.example.zhanjiyuan.linb.R;
 
 import java.util.ArrayList;
 
+import activity.NewsActivity;
 import gesture.MyGestureAdapter;
 import gesture.MyGestureDetector;
 import item.Item;
 import item.ItemMessage;
+import sound.OfflineSpeechSynthesizer;
 
 /**
  * Created by zhanjiyuan on 15/9/22.
@@ -53,6 +60,10 @@ public class ModuleList extends Activity {
                            objectAnimator_swift_1, objectAnimator_swift_2;
     private boolean over_flag = false;
 
+    //Service
+    private OfflineSpeechSynthesizer speech;
+    private boolean isServiceBound = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,6 +75,23 @@ public class ModuleList extends Activity {
         initImageSwitcher();
 
         initData();
+        bindSpeechService();
+//        OfflineSpeechSynthesizer offlineSpeechSynthesizer = new OfflineSpeechSynthesizer();
+//        offlineSpeechSynthesizer.bindService();
+//        speech.TextToSpeech("哈哈哈哈耶");
+    }
+
+    private void speech(String str){
+        speech.TextToSpeech(str);
+    }
+
+    private void bindSpeechService(){
+        System.out.println("Begin to bind service");
+        final Intent serviceIntent = new Intent(getApplicationContext(), OfflineSpeechSynthesizer.class);
+        boolean is = this.bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE);
+        System.out.println("bind service is "+is);
+        isServiceBound = true;
+        System.out.println("End to bind service");
     }
 
     /*
@@ -123,7 +151,7 @@ public class ModuleList extends Activity {
     }
 
     private void emptyList(){
-        //display.setText("empty moduleList");
+//        set;
     }
 
     /*
@@ -159,6 +187,9 @@ public class ModuleList extends Activity {
 
         @Override
         public boolean onDown(MotionEvent ev){
+
+//            speech("会红红火火");
+//            return true;
             return itemArrayList.get(index).clickOnce();
         }
 
@@ -241,5 +272,27 @@ public class ModuleList extends Activity {
         itemArrayList.add(new ItemMessage(this, "我是标题五", "假如生活欺骗了你不要悲伤不要心急"));
         itemArrayList.add(new ItemMessage(this, "我是标题六", "我们在哪里我在在干什么"));
         itemArrayList.get(0).autoRunBegin();
+    }
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            speech = ((OfflineSpeechSynthesizer.LocalBinder)service).getService();
+            System.out.println("Speech : " + speech);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            speech = null;
+        }
+    };
+
+    @Override
+    protected void onDestroy() {
+        if(isServiceBound){
+            unbindService(mConnection);
+            speech = null;
+        }
+        super.onDestroy();
     }
 }

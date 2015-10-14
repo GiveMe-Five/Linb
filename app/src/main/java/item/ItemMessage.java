@@ -3,6 +3,7 @@ package item;
 import com.example.zhanjiyuan.linb.R;
 
 import module.ModuleList;
+import sound.OfflineSpeechSynthesizer;
 
 /**
  * Created by zhanjiyuan on 15/9/22.

@@ -8,6 +8,6 @@ import com.example.zhanjiyuan.linb.R;
 public class Constants {
 
     //Network
-    public final static String SERVER_IP = "http://cfbukqfljh.localtunnel.me/NewsCrawler/";
+    public final static String SERVER_IP = "http://dev.weixin.tunnel.mobi/NewsCrawler/";
 
 }
