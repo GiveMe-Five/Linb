@@ -74,15 +74,25 @@ public class ModuleList extends Activity {
         initColorTran();
         initImageSwitcher();
 
-        initData();
         bindSpeechService();
-//        OfflineSpeechSynthesizer offlineSpeechSynthesizer = new OfflineSpeechSynthesizer();
-//        offlineSpeechSynthesizer.bindService();
-//        speech.TextToSpeech("哈哈哈哈耶");
+
+        initData();
     }
 
-    private void speech(String str){
+    public void speechText(String str){
         speech.TextToSpeech(str);
+    }
+
+    public void pauseText(){
+        speech.pause();
+    }
+
+    public void resumeText(){
+        speech.resume();
+    }
+
+    public void stopText(){
+        speech.cancel();
     }
 
     private void bindSpeechService(){
@@ -177,7 +187,7 @@ public class ModuleList extends Activity {
             case MotionEvent.ACTION_MOVE:
                 vTracker.addMovement(event);
                 vTracker.computeCurrentVelocity(100);
-                ruler -= vTracker.getYVelocity();
+                ruler -= Math.min(vTracker.getYVelocity(),500);
                 updateDisplay();
                 break;
         }
@@ -187,9 +197,6 @@ public class ModuleList extends Activity {
 
         @Override
         public boolean onDown(MotionEvent ev){
-
-//            speech("会红红火火");
-//            return true;
             return itemArrayList.get(index).clickOnce();
         }
 
@@ -271,7 +278,6 @@ public class ModuleList extends Activity {
         itemArrayList.add(new ItemMessage(this, "我是标题四", "随风奔跑自由是方向"));
         itemArrayList.add(new ItemMessage(this, "我是标题五", "假如生活欺骗了你不要悲伤不要心急"));
         itemArrayList.add(new ItemMessage(this, "我是标题六", "我们在哪里我在在干什么"));
-        itemArrayList.get(0).autoRunBegin();
     }
 
     private ServiceConnection mConnection = new ServiceConnection() {

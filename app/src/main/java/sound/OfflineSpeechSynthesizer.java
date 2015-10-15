@@ -13,13 +13,33 @@ import com.baidu.speechsynthesizer.*;
 import com.baidu.speechsynthesizer.publicutility.*;
 
 public class OfflineSpeechSynthesizer extends Service implements SpeechSynthesizerListener{
-
     private LocalBinder localBinder = new LocalBinder();
     SpeechSynthesizer speechSynthesizer = null;
+    private static int ON_EMPTY = 0,
+                ON_PLAYING = 1,
+                ON_PASUE = 2;
+    private int status = ON_EMPTY;
 
-    public void TextToSpeech(String text) {
+    private void init(){
+        System.loadLibrary("gnustl_shared");
+        // 部分版本不需要BDSpeechDecoder_V1
+        try {
+            System.loadLibrary("BDSpeechDecoder_V1");
+        } catch (UnsatisfiedLinkError e) {
+            SpeechLogger.logD("load BDSpeechDecoder_V1 failed, ignore");
+        }
+        System.loadLibrary("bd_etts");
+        System.loadLibrary("bds");
+
         speechSynthesizer = SpeechSynthesizer.newInstance(SpeechSynthesizer.SYNTHESIZER_AUTO, getApplicationContext(), "holder", this);
         speechSynthesizer.setApiKey("m2eQaVMpmZdYPk62RMttxwWe", "babd78812af739bb428329aca78cec7c");
+        speechSynthesizer.setAppId("7027882");
+        //speechSynthesizer.setParam(SpeechSynthesizer.PARAM_TTS_LICENCE_FILE, "libs/temp_license_2015-10-15");
+    }
+    public void TextToSpeech(String text) {
+        init();
+        if (status != ON_EMPTY) speechSynthesizer.cancel();
+        status = ON_PLAYING;
         speechSynthesizer.speak(text);
     }
 
@@ -30,17 +50,25 @@ public class OfflineSpeechSynthesizer extends Service implements SpeechSynthesiz
     }
 
     public void pause() {
-        speechSynthesizer.pause();
+        if (status == ON_PLAYING){
+            status = ON_PASUE;
+            speechSynthesizer.pause();
+        }
     }
 
     public void resume() {
-        speechSynthesizer.resume();
+        if (status == ON_PASUE) {
+            status = ON_PLAYING;
+            speechSynthesizer.resume();
+        }
     }
 
     public void cancel() {
-        speechSynthesizer.cancel();
+        if (status != ON_EMPTY) {
+            status = ON_EMPTY;
+            speechSynthesizer.cancel();
+        }
     }
-
     @Override
     public IBinder onBind(Intent intent) {
         return localBinder;
@@ -101,7 +129,3 @@ public class OfflineSpeechSynthesizer extends Service implements SpeechSynthesiz
 
     }
 }
-
-
-
-
