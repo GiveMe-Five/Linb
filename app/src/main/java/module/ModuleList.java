@@ -1,6 +1,5 @@
 package module;
 
-import android.animation.AnimatorInflater;
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
@@ -14,55 +13,32 @@ import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.animation.AnimationUtils;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.ViewSwitcher;
 
+import com.baidu.speechsynthesizer.SpeechSynthesizer;
+import com.baidu.speechsynthesizer.publicutility.SpeechError;
 import com.example.zhanjiyuan.linb.R;
 
 import java.util.ArrayList;
 
-import activity.NewsActivity;
+import argument.Constants;
 import gesture.MyGestureAdapter;
 import gesture.MyGestureDetector;
 import item.Item;
 import item.ItemMessage;
 import sound.OfflineSpeechSynthesizer;
+import sound.SpeechAdapter;
 
 /**
  * Created by zhanjiyuan on 15/9/22.
- * 暂时作为模版使用的一个Activity，各种列表应当会在这个App中反复使用：
- *      例如：新闻列表，消息列表，好友列表etc
- * 因此可以将列表的操作完全放在这个类里面实现
- *      例如：归属于列表操作的上下滑动切换Item
- * 更多的操作例如点击，则由列表调用列表中Item的函数实现
- * private protected还没写。。。
+ *
  */
 
-public class ModuleList extends Activity {
-
-    //用于记录当前页面的item的列表
-    private ArrayList<Item> itemArrayList = new ArrayList<Item>();
-    private int index;
-    private double ruler;
-
-    //手势与速度侦测
-    private VelocityTracker vTracker = null;
-    private MyGestureDetector detector;
-
-    //显示当前所处的item内容
-    private int slipRate = 1000;
-
-    private RelativeLayout listLayout;
-    private ImageSwitcher imageswitcher;
-    private ObjectAnimator objectAnimator_over_1, objectAnimator_over_2,
-                           objectAnimator_swift_1, objectAnimator_swift_2;
-    private boolean over_flag = false;
-
-    //Service
-    private OfflineSpeechSynthesizer speech;
-    private boolean isServiceBound = false;
+public class ModuleList extends Activity{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,105 +47,77 @@ public class ModuleList extends Activity {
         listLayout = (RelativeLayout)findViewById(R.id.layout_list);
 
         detector = new MyGestureDetector(getApplicationContext(), adapter);
-        initColorTran();
         initImageSwitcher();
-
         bindSpeechService();
+        setBackground(Constants.BACKGROUND_EMPTY);
 
-        initData();
     }
 
-    public void speechText(String str){
-        speech.TextToSpeech(str);
-    }
-
-    public void pauseText(){
-        speech.pause();
-    }
-
-    public void resumeText(){
-        speech.resume();
-    }
-
-    public void stopText(){
-        speech.cancel();
-    }
-
-    private void bindSpeechService(){
-        System.out.println("Begin to bind service");
-        final Intent serviceIntent = new Intent(getApplicationContext(), OfflineSpeechSynthesizer.class);
-        boolean is = this.bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE);
-        System.out.println("bind service is "+is);
-        isServiceBound = true;
-        System.out.println("End to bind service");
-    }
-
-    /*
-        列表的操作，例如上下滑动，越界检查以及动画的调用
+    /* MAIN CONTROL
+     *
      */
-
-    private void updateDisplay(){
-        int pre_index = index;
-        index = (int)(ruler / slipRate);
+    private ArrayList<Item> itemArrayList = new ArrayList<Item>();
+    private int index;
+    private double ruler;
+    private int itemWidth = 1000;
+    private void updateIndex(){
+        int preIndex = index;
+        index = (int)(ruler / itemWidth);
 
         if (ruler < 0) overTop();
         else if (index >= itemArrayList.size()) overBottom();
-        else if (pre_index != index){
-            itemArrayList.get(index).autoRunEnd();
-            over_flag = false;
-            objectAnimator_swift_1.start();
-            objectAnimator_swift_2.start();
+        else if (preIndex != index){
+            itemArrayList.get(preIndex).autoRunEnd();
+            overFlag = false;
+            setBackgroundAnimatorLane(backgroundColor, itemArrayList.get(index).getStandardBackgroundColor());
             itemArrayList.get(index).autoRunBegin();
         }
     }
-
-    private void toBottom(){
-        System.out.println("toBottom");
-        if (itemArrayList.size() != 0) index = itemArrayList.size() - 1;
-        else emptyList();
-    }
-    private void toTop(){
-        System.out.println("toTop");
-        if (itemArrayList.size() != 0) index = 0;
-        else emptyList();
-    }
     private void overTop(){
-        if (!over_flag) {
-            objectAnimator_over_1.start();
-            objectAnimator_over_2.start();
-            over_flag = true;
+        if (!overFlag) {
+            setBackgroundAnimatorRet(backgroundColor, Constants.BACKGROUND_EMPTY);
+            overFlag = true;
+            System.out.println("overTop");
         }
-        System.out.println("overTop");
         if (itemArrayList.size() != 0) {
             index = 0;
-            ruler = 0;
+            indexSyn();
         }
         else emptyList();
     }
     private void overBottom(){
-        if (!over_flag) {
-            objectAnimator_over_1.start();
-            objectAnimator_over_2.start();
-            over_flag = true;
+        if (!overFlag) {
+            setBackgroundAnimatorRet(backgroundColor, Constants.BACKGROUND_EMPTY);
+            overFlag = true;
+            System.out.println("overBottom");
         }
-        System.out.println("overBottom");
         if (itemArrayList.size() != 0){
             index = itemArrayList.size() - 1;
-            ruler = index * slipRate;
+            indexSyn();
         }
         else emptyList();
     }
-
     private void emptyList(){
 //        set;
     }
+    private void indexSyn(){
+        ruler = index * itemWidth + itemWidth / 2;
+    }
+    public void lastItem(){
+        if (index - 1 >= 0) index--;
+        indexSyn();
+    }
+    public void nextItem(){
+        if (index + 1 <= itemArrayList.size() - 1) index++;
+        indexSyn();
+    }
 
-    /*
-        监听器的设置以及实现手势接口的各个函数
-        如前面所提及的，onDown属于Item，则调用Item类的函数
-        滑动属于List，则调用List类也就是本身定义的函数，因为所有列表上下滑动的意义都相同，所以不必重写
+    /* GESTURE
+     *
      */
-
+    private VelocityTracker vTracker = null;
+    private MyGestureDetector detector;
+    private int speedLimit = 150;
     @Override
     public boolean onTouchEvent(MotionEvent event){
         int action = event.getAction();
@@ -182,13 +130,18 @@ public class ModuleList extends Activity {
                 vTracker.addMovement(event);
                 break;
             case MotionEvent.ACTION_UP:
-                over_flag = false;
+                overFlag = false;
+                indexSyn();
                 break;
             case MotionEvent.ACTION_MOVE:
                 vTracker.addMovement(event);
                 vTracker.computeCurrentVelocity(100);
-                ruler -= Math.min(vTracker.getYVelocity(),500);
-                updateDisplay();
+//                System.out.println("speed = " + vTracker.getYVelocity());
+                double delta = vTracker.getYVelocity();
+                if (delta > speedLimit) delta = speedLimit;
+                else if (delta < -speedLimit) delta = -speedLimit;
+                ruler -= delta;
+                updateIndex();
                 break;
         }
         return detector.onTouchEvent(event);
@@ -206,31 +159,27 @@ public class ModuleList extends Activity {
         }
     };
 
-
-    /*
-        TODO: Service
-        服务器的连接，以及自己去抓取新的信息加入List，每个List抓取内容应该是不同的，需要重写，这里只是给个例子
-        服务需要重写fetchItem
+    /* FETCH DATA
+     *
      */
-
     protected void fetchItem(String arg){
         //TODO OVERRIDE
     }
-
     protected void addItem(Item item){
         if (item != null)
             itemArrayList.add(item);
     }
 
-    /*
-        各种翻页的动画之类的
-        一个想法，每个页面显示一个Item，包含一个纯色块背景＋白色巨大符号
-        用来表现当前所处的位置以及状态，来提醒用户需要对应怎样的手势
-        例如：蓝色背景表示处于List，对应上下滑动手势；再比如，红色背景对应Input，对应输入法
-        也可以用来表示当前状态：例如红色代表Warning，绿色代表程序正常工作
-        符号可以用来表示例如当前是播放状态的▶️，或是暂停状态的||
+    /* UI CONTROL
+     *
      */
-
+    private RelativeLayout listLayout;
+    private ImageSwitcher imageswitcher;
+    private boolean overFlag = false;
+    private int swiftDurLane = 400;
+    private int swiftDurRet = 400;
+    private int backgroundColor;
+    private int iconStatus;
     private void initImageSwitcher(){
         imageswitcher = (ImageSwitcher)findViewById(R.id.layout_list_image_switcher);
         imageswitcher.setFactory(new ViewSwitcher.ViewFactory() {
@@ -244,47 +193,70 @@ public class ModuleList extends Activity {
         imageswitcher.setInAnimation(AnimationUtils.loadAnimation(getApplicationContext(), android.R.anim.fade_in));
         imageswitcher.setOutAnimation(AnimationUtils.loadAnimation(getApplicationContext(), android.R.anim.fade_out));
     }
-
-    public void setCurrentImage(int res){
-        imageswitcher.setImageResource(res);
+    public void setIcon(int icon){
+        imageswitcher.setImageResource(icon);
+        iconStatus = icon;
     }
-
-    private void initColorTran(){
-        listLayout.setBackgroundColor(getResources().getColor(R.color.news_color));
-
-        objectAnimator_over_1 = (ObjectAnimator) AnimatorInflater.loadAnimator(ModuleList.this, R.animator.coloranimation_over_1);
-        objectAnimator_over_1.setEvaluator(new ArgbEvaluator());
-        objectAnimator_over_1.setTarget(listLayout);
-
-        objectAnimator_over_2 = (ObjectAnimator) AnimatorInflater.loadAnimator(ModuleList.this, R.animator.coloranimation_over_2);
-        objectAnimator_over_2.setEvaluator(new ArgbEvaluator());
-        objectAnimator_over_2.setTarget(listLayout);
-        objectAnimator_over_2.setStartDelay(200);
-
-        objectAnimator_swift_1 = (ObjectAnimator) AnimatorInflater.loadAnimator(ModuleList.this, R.animator.coloranimation_swift_1);
-        objectAnimator_swift_1.setEvaluator(new ArgbEvaluator());
-        objectAnimator_swift_1.setTarget(listLayout);
-
-        objectAnimator_swift_2 = (ObjectAnimator) AnimatorInflater.loadAnimator(ModuleList.this, R.animator.coloranimation_swift_2);
-        objectAnimator_swift_2.setEvaluator(new ArgbEvaluator());
-        objectAnimator_swift_2.setTarget(listLayout);
-        objectAnimator_swift_2.setStartDelay(200);
+    public void setBackground(int color){
+        listLayout.setBackgroundColor(color);
+        backgroundColor = color;
+    }
+    public void setBackgroundAnimatorLane(int colorFrom, int colorTo){
+        //COLOR FORMAT: AABBGGRR
+        ObjectAnimator translationUp = ObjectAnimator.ofInt(listLayout, "backgroundColor", colorFrom, colorTo);
+        translationUp.setInterpolator(new DecelerateInterpolator());
+        translationUp.setDuration(swiftDurLane);
+//        translationUp.setRepeatCount(-1);
+//        translationUp.setRepeatMode(Animation.REVERSE);
+        translationUp.setEvaluator(new ArgbEvaluator());
+        translationUp.start();
+        backgroundColor = colorTo;
+    }
+    public void setBackgroundAnimatorRet(int colorSide, int colorMid){
+        //COLOR FORMAT: AABBGGRR
+        ObjectAnimator translationUp = ObjectAnimator.ofInt(listLayout, "backgroundColor", colorSide, colorMid, colorSide);
+        translationUp.setInterpolator(new DecelerateInterpolator());
+        translationUp.setDuration(swiftDurRet);
+        translationUp.setEvaluator(new ArgbEvaluator());
+        translationUp.start();
+    }
+    public int getBackgroundColor(){
+        return backgroundColor;
+    }
+    public int getIconStatus(){
+        return iconStatus;
     }
 
     private void initData(){
-        itemArrayList.add(new ItemMessage(this, "我是标题一", "美丽的珍珠链历史的脊梁骨贯古今"));
-        itemArrayList.add(new ItemMessage(this, "我是标题二", "悄悄的我走了正如我悄悄的来"));
-        itemArrayList.add(new ItemMessage(this, "我是标题三", "春江潮水连海平海上明月共潮生"));
-        itemArrayList.add(new ItemMessage(this, "我是标题四", "随风奔跑自由是方向"));
-        itemArrayList.add(new ItemMessage(this, "我是标题五", "假如生活欺骗了你不要悲伤不要心急"));
-        itemArrayList.add(new ItemMessage(this, "我是标题六", "我们在哪里我在在干什么"));
+        itemArrayList.add(new ItemMessage(this, "我是标题一", "近日美国一堆新婚夫妇在婚礼上惊现了一名\"不速之客\"让新娘直接傻眼泪奔了，而这名\"不速之客\"不是别人正是美国总统奥巴马。据悉这对新人的婚礼是在一个高尔夫球场举行，而与此同时奥巴马当天也到了该高尔夫球场打球。"));
+        itemArrayList.add(new ItemMessage(this, "我是标题二", "日前，央视新修订版的《播音员主持人管理办法》在台内部发布。按央视官方发布的口径，此次修订版的《办法》打破以往传统的播音员、主持人终身制，实现频道与主持人之间的双向选择，而考核制度方面也奖惩分明，凡考核不合格者，将被调离播音主持岗位。"));
+        itemArrayList.add(new ItemMessage(this, "我是标题三", "人社部部长尹蔚民昨天介绍了“十二五”以来就业和社会保障工作成就，称我国是目前世界上退休年龄最早的国家，平均退休年龄不到55岁。经中央批准后，人社部将向社会公开延迟退休改革方案，通过小步慢走，每年推迟几个月，逐步推迟到合理的退休年龄。"));
+        itemArrayList.add(new ItemMessage(this, "我是标题四", "男子每天吃5斤辣椒，被称“辣椒王”。该男子是河南新郑市龙湖镇沙窝李村村民，名叫李永志，他竟能把辣椒当饭吃，每天要吃3到5斤的辣椒。他曾参加过不少吃辣椒比赛，打败不少“辣椒王子”，赢得殊荣，被称“辣椒王”。"));
+        itemArrayList.add(new ItemMessage(this, "我是标题五", "一年前，在石狮经营海鲜火锅店的王勇海的妻子无意间从一个黄螺体中切出一颗珠子，随后便渐渐忘了这件事。最近，有亲戚告诉王先生，网上也有一颗与他收藏的“龙珠”很像，价值不菲，他这才如梦初醒，将原本随意存放的“宝珠”藏进了保险柜。"));
+        itemArrayList.add(new ItemMessage(this, "我是标题六", "104岁老人长黑发换新牙，相信你一定觉得不可思议。湖北随县城关104岁婆婆杨传玉身体健康，不但生活自理，还能帮家人做些家务事。让人惊奇的是，杨传玉100岁以后竟然长了新牙和黑头发，而且皮肤不松弛很有弹性，当地人称这位百岁婆婆返老还童。"));
+        index = 1;
+        updateIndex();
     }
 
+    /* SPEECH SERVER
+     *
+     */
+    private OfflineSpeechSynthesizer speech;
+    private boolean isServiceBound = false;
+
+    private SpeechAdapter speechAdapter = new SpeechAdapter(){
+        @Override
+        public void onSpeechFinish(SpeechSynthesizer speechSynthesizer){
+            itemArrayList.get(index).speechFinish();
+        }
+    };
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             speech = ((OfflineSpeechSynthesizer.LocalBinder)service).getService();
             System.out.println("Speech : " + speech);
+            speech.init(speechAdapter);
+            initData();
         }
 
         @Override
@@ -292,7 +264,14 @@ public class ModuleList extends Activity {
             speech = null;
         }
     };
-
+    private void bindSpeechService(){
+        System.out.println("Begin to bind service");
+        final Intent serviceIntent = new Intent(getApplicationContext(), OfflineSpeechSynthesizer.class);
+        boolean is = this.bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE);
+        System.out.println("bind service is "+is);
+        isServiceBound = true;
+        System.out.println("End to bind service");
+    }
     @Override
     protected void onDestroy() {
         if(isServiceBound){
@@ -300,5 +279,46 @@ public class ModuleList extends Activity {
             speech = null;
         }
         super.onDestroy();
+    }
+
+    /* SPEECH CONTROL
+     *
+     */
+    private int speechStatus = Constants.SPEECH_EMPTY;
+    public int getSpeechStaus(){
+        return speechStatus;
+    }
+    private void setSpeechStatus(int status){
+        speechStatus = status;
+    }
+    public boolean speechText(String str){
+        if (speechStatus != Constants.SPEECH_EMPTY) speech.cancel();
+        speech.TextToSpeech(str);
+        speechStatus = Constants.SPEECH_PLAY;
+        return true;
+    }
+    public boolean pauseText(){
+        if (speechStatus == Constants.SPEECH_PLAY){
+            speech.pause();
+            speechStatus = Constants.SPEECH_PAUSE;
+            return true;
+        }
+        else return false;
+    }
+    public boolean resumeText(){
+        if (speechStatus == Constants.SPEECH_PAUSE){
+            speech.resume();
+            speechStatus = Constants.SPEECH_PLAY;
+            return true;
+        }
+        else return false;
+    }
+    public boolean stopText(){
+        if (speechStatus != Constants.SPEECH_EMPTY){
+            speech.cancel();
+            speechStatus = Constants.SPEECH_EMPTY;
+            return true;
+        }
+        else return false;
     }
 }

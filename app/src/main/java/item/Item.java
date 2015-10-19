@@ -1,11 +1,16 @@
 package item;
 
+import com.baidu.speechsynthesizer.SpeechSynthesizer;
+import com.baidu.speechsynthesizer.publicutility.SpeechError;
+
 /**
  * Created by zhanjiyuan on 15/9/22.
  */
 public abstract class Item {
 
     String key;
+
+    public abstract int getStandardBackgroundColor();
 
     public abstract void autoRunBegin();
     public abstract void autoRunEnd();
@@ -15,6 +20,14 @@ public abstract class Item {
 
     public abstract String getKey();
 
-    public abstract String getIcon(String status);
-    public abstract String getBackground(String status);
+//    public abstract void speechStart();
+//    public abstract void speechPause();
+//    public abstract void speechResume();
+//    public abstract void speechCancel();
+    public abstract void speechFinish();
 }
+
+//    @Override
+//    public void onSynthesizeFinish(SpeechSynthesizer speechSynthesizer) {
+//
+//    }

@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
-import helper.Constants;
+import argument.Constants;
 import module.ModuleList;
 
 /**
@@ -34,7 +34,7 @@ public class NewsActivity extends ModuleList {
         public void handleMessage(Message msg){
             switch(msg.what){
                 case 0:
-//                    fetchItem((String)msg.obj);
+                    fetchItem((String)msg.obj);
                     addItem(null);
                     break;
                 default:
