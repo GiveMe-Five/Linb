@@ -10,12 +10,10 @@ import com.baidu.speechsynthesizer.publicutility.SpeechError;
 public class SpeechAdapter implements SpeechSynthesizerListener {
     @Override
     public void onStartWorking(SpeechSynthesizer speechSynthesizer) {
-        System.out.println("onStartingWorking");
     }
 
     @Override
     public void onSpeechStart(SpeechSynthesizer speechSynthesizer) {
-        System.out.println("onSpeechStart");
     }
 
     @Override
@@ -28,16 +26,15 @@ public class SpeechAdapter implements SpeechSynthesizerListener {
 
     @Override
     public void onSpeechProgressChanged(SpeechSynthesizer speechSynthesizer, int i) {
+        System.out.println(speechSynthesizer.getPlayerStatus());
     }
 
     @Override
     public void onSpeechPause(SpeechSynthesizer speechSynthesizer) {
-        System.out.println("Pause");
     }
 
     @Override
     public void onSpeechResume(SpeechSynthesizer speechSynthesizer) {
-        System.out.println("Resume");
     }
 
     @Override

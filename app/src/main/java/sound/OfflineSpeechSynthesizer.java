@@ -30,7 +30,7 @@ public class OfflineSpeechSynthesizer extends Service{
         speechSynthesizer = SpeechSynthesizer.newInstance(SpeechSynthesizer.SYNTHESIZER_AUTO, getApplicationContext(), "holder", listener);
         speechSynthesizer.setApiKey("m2eQaVMpmZdYPk62RMttxwWe", "babd78812af739bb428329aca78cec7c");
         speechSynthesizer.setAppId("7027882");
-        //speechSynthesizer.setParam(SpeechSynthesizer.PARAM_TTS_LICENCE_FILE, "libs/temp_license_2015-10-15");
+        speechSynthesizer.setParam(SpeechSynthesizer.PARAM_TTS_LICENCE_FILE, "/Users/zhanjiyuan/AndroidStudioProjects/Linb/app/libs/temp_license_2015-10-15");
     }
     public void TextToSpeech(String text) {
         speechSynthesizer.speak(text);
@@ -53,6 +53,11 @@ public class OfflineSpeechSynthesizer extends Service{
     public void cancel() {
         speechSynthesizer.cancel();
     }
+
+    public void getStatus(){
+        System.out.println(speechSynthesizer.getPlayerStatus());
+    }
+
     @Override
     public IBinder onBind(Intent intent) {
         return localBinder;
