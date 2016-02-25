@@ -10,12 +10,7 @@ public class ItemMessage extends Item{
 
     private ModuleList rev;
 
-    private int ON_STOP = 0,
-                ON_PLAY = 1,
-                ON_PAUSE = 2;
-
     private String content;
-    private int status = ON_STOP;
 
     public ItemMessage(ModuleList activity, String title, String content){
         this.rev = activity;
@@ -30,67 +25,44 @@ public class ItemMessage extends Item{
 
     @Override
     public void autoRunBegin() {
-        if (rev.speechText(content)) {
-            status = ON_PLAY;
-            rev.setIcon(Constants.ICON_PLAY);
-            System.out.println("autobegin");
-        }
+        rev.speakText(content);
+        System.out.println("自动播放");
     }
 
     @Override
     public void autoRunEnd() {
-        while (status != ON_STOP){
-            if (rev.stopText())
-                status = ON_STOP;
-        }
-        rev.setIcon(Constants.ICON_EMPTY);
+        rev.stopText();
+        System.out.println("自动销毁");
     }
 
     @Override
     public boolean clickOnce() {
-        if (status == ON_PLAY){
-            System.out.println("status = onplay");
-            if (rev.pauseText()) {
-                status = ON_PAUSE;
-                rev.setIcon(Constants.ICON_PAUSE);
-            }
-        }
-        else if (status == ON_PAUSE){
-            if (rev.resumeText()) {
-                status = ON_PLAY;
-                rev.setIcon(Constants.ICON_PLAY);
-            }
-        }
-        else if (status == ON_STOP){
-            if (rev.speechText(content)) {
-                status = ON_PLAY;
-                rev.setIcon(Constants.ICON_PLAY);
-            }
+        System.out.println(rev.speech.mTts.isSpeaking());
+        int status = rev.getSpeechStatus();
+        switch (status){
+            case Constants.SPEECH_PLAY:
+                rev.pauseText();
+
+                break;
+            case Constants.SPEECH_PAUSE:
+                rev.resumeText();
+                break;
+            case Constants.SPEECH_EMPTY:
+                rev.speakText(content);
+                break;
         }
         return true;
     }
 
     @Override
     public boolean clickTwice() {
-        if (status != ON_STOP){
-            if (rev.stopText()) {
-                status = ON_STOP;
-                rev.setIcon(Constants.ICON_STOP);
-            }
-        }
+        if (rev.getSpeechStatus() != Constants.SPEECH_EMPTY)
+            rev.stopText();
         return true;
     }
 
     @Override
     public String getKey() {
         return key;
-    }
-
-    @Override
-    public void speechFinish() {
-        if (rev.stopText()) {
-            status = ON_STOP;
-            rev.setIcon(Constants.ICON_STOP);
-        }
     }
 }

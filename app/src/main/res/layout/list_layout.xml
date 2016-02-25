@@ -9,11 +9,46 @@
     tools:context="com.example.imageswitcherdemo.MainActivity"
     android:id="@+id/layout_list">
 
-    <ImageSwitcher
-        android:id="@+id/layout_list_image_switcher"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="370dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:id="@+id/layout_list_frame_top"
+        android:background="#FF0000"
+        android:layout_marginBottom="20dp"
+        android:padding="30dp">
 
-    </ImageSwitcher>
+        <ImageSwitcher
+            android:id="@+id/layout_list_display"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+        </ImageSwitcher>
+
+        <TextSwitcher
+            android:layout_height="fill_parent"
+            android:layout_width="fill_parent"
+            android:id="@+id/layout_list_text">
+        </TextSwitcher>
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:id="@+id/layout_list_frame_bottom"
+        android:background="#00FF00"
+        android:layout_below="@+id/layout_list_frame_top"
+        android:padding="30dp">
+
+        <ImageSwitcher
+            android:id="@+id/layout_list_operate"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+        </ImageSwitcher>
+    </FrameLayout>
+
+
 
 </RelativeLayout>

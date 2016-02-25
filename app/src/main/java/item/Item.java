@@ -1,8 +1,5 @@
 package item;
 
-import com.baidu.speechsynthesizer.SpeechSynthesizer;
-import com.baidu.speechsynthesizer.publicutility.SpeechError;
-
 /**
  * Created by zhanjiyuan on 15/9/22.
  */
@@ -23,8 +20,8 @@ public abstract class Item {
 //    public abstract void speechStart();
 //    public abstract void speechPause();
 //    public abstract void speechResume();
-//    public abstract void speechCancel();
-    public abstract void speechFinish();
+//    public abstract void speechStop();
+//    public abstract void speechFinish();
 }
 
 //    @Override
