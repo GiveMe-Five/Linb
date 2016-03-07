@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -24,6 +26,8 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+
+import argument.Constants;
 
 /**
  * Created by zhanjiyuan on 16/2/24.
@@ -49,100 +53,47 @@ public class IATService extends Service {
 
     // 语音听写对象
     private SpeechRecognizer mIat;
-    // 语音听写UI
-    private RecognizerDialog mIatDialog;
+    private Handler handler;
     // 用HashMap存储听写结果
     private HashMap<String, String> mIatResults = new LinkedHashMap<String, String>();
 
-    private EditText mResultText;
-    private Toast mToast;
-
-    public void initialize() {
-        // 初始化识别无UI识别对象
-        // 使用SpeechRecognizer对象，可根据回调消息自定义界面；
+    public void initialize(Handler handler) {
         mIat = SpeechRecognizer.createRecognizer(IATService.this, mInitListener);
-
-        // 初始化听写Dialog，如果只使用有UI听写功能，无需创建SpeechRecognizer
-        // 使用UI听写功能，请根据sdk文件目录下的notice.txt,放置布局文件和图片资源
-        mIatDialog = new RecognizerDialog(IATService.this, mInitListener);
-
-        mToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
-        System.out.println("yes it's you!");
-        ret = mIat.startListening(mRecognizerListener);
+        this.handler = handler;
+//        setParam();
     }
 
-    int ret = 0; // 函数调用返回值
+    public void startListen(){
+        // 如何判断一次听写结束：OnResult isLast=true 或者 onError
+        mIatResults.clear();
+        ret = mIat.startListening(mRecognizerListener);
+        if (ret != ErrorCode.SUCCESS) {
+            System.out.println("听写失败,错误码：" + ret);
+        }
+    }
 
-//    @Override
-//    public void onClick(View view) {
-//        switch (view.getId()) {
-//            // 开始听写
-//            // 如何判断一次听写结束：OnResult isLast=true 或者 onError
-//            case R.id.iat_recognize:
-//                mResultText.setText(null);// 清空显示内容
-//                mIatResults.clear();
-//                // 设置参数
-//                setParam();
-//                boolean isShowDialog = true;
-//                if (isShowDialog) {
-//                    // 显示听写对话框
-//                    mIatDialog.setListener(mRecognizerDialogListener);
-//                    mIatDialog.show();
-//                    showTip(getString(R.string.text_begin));
-//                } else {
-//                    // 不显示听写对话框
-//                    ret = mIat.startListening(mRecognizerListener);
-//                    if (ret != ErrorCode.SUCCESS) {
-//                        showTip("听写失败,错误码：" + ret);
-//                    } else {
-//                        showTip(getString(R.string.text_begin));
-//                    }
-//                }
-//                break;
-//            // 音频流识别
-//            case R.id.iat_recognize_stream:
-//                mResultText.setText(null);// 清空显示内容
-//                mIatResults.clear();
-//                // 设置参数
-//                setParam();
-//                // 设置音频来源为外部文件
-//                mIat.setParameter(SpeechConstant.AUDIO_SOURCE, "-1");
-//                // 也可以像以下这样直接设置音频文件路径识别（要求设置文件在sdcard上的全路径）：
-//                // mIat.setParameter(SpeechConstant.AUDIO_SOURCE, "-2");
-//                // mIat.setParameter(SpeechConstant.ASR_SOURCE_PATH, "sdcard/XXX/XXX.pcm");
-//                ret = mIat.startListening(mRecognizerListener);
-//                if (ret != ErrorCode.SUCCESS) {
-//                    showTip("识别失败,错误码：" + ret);
-//                } else {
-//                    byte[] audioData = FucUtil.readAudioFile(IatDemo.this, "iattest.wav");
-//
-//                    if (null != audioData) {
-//                        showTip(getString(R.string.text_begin_recognizer));
-//                        // 一次（也可以分多次）写入音频文件数据，数据格式必须是采样率为8KHz或16KHz（本地识别只支持16K采样率，云端都支持），位长16bit，单声道的wav或者pcm
-//                        // 写入8KHz采样的音频时，必须先调用setParameter(SpeechConstant.SAMPLE_RATE, "8000")设置正确的采样率
-//                        // 注：当音频过长，静音部分时长超过VAD_EOS将导致静音后面部分不能识别
-//                        mIat.writeAudio(audioData, 0, audioData.length);
-//                        mIat.stopListening();
-//                    } else {
-//                        mIat.cancel();
-//                        showTip("读取音频流失败");
-//                    }
-//                }
-//                break;
-//            // 停止听写
-//            case R.id.iat_stop:
-//                mIat.stopListening();
-//                showTip("停止听写");
-//                break;
-//            // 取消听写
-//            case R.id.iat_cancel:
-//                mIat.cancel();
-//                showTip("取消听写");
-//                break;
-//            default:
-//                break;
-//        }
-//    }
+    public void stopListen(){
+        mIat.stopListening();
+        new Thread(){
+            @Override
+            public void run(){
+                while (mIat.isListening());
+                handler.sendMessage(Constants.createMessage(Constants.MESSAGE_LISTEN_COMPLETE));
+            }
+        }.start();
+    }
+
+    public void cancelListen(){
+        mIat.cancel();
+        new Thread(){
+            @Override
+            public void run(){
+                while (mIat.isListening());
+                handler.sendMessage(Constants.createMessage(Constants.MESSAGE_LISTEN_CANCEL));
+            }
+        }.start();
+    }
+    int ret = 0; // 函数调用返回值
 
     /**
      * 初始化监听器。
@@ -152,7 +103,7 @@ public class IATService extends Service {
         @Override
         public void onInit(int code) {
             if (code != ErrorCode.SUCCESS) {
-                showTip("初始化失败，错误码：" + code);
+                System.out.println("初始化失败，错误码：" + code);
             }
         }
     };
@@ -165,8 +116,7 @@ public class IATService extends Service {
 
         @Override
         public void onBeginOfSpeech() {
-            // 此回调表示：sdk内部录音机已经准备好了，用户可以开始语音输入
-            showTip("开始说话");
+            handler.sendMessage(Constants.createMessage(Constants.MESSAGE_LISTEN_START));
         }
 
         @Override
@@ -174,13 +124,13 @@ public class IATService extends Service {
             // Tips：
             // 错误码：10118(您没有说话)，可能是录音机权限被禁，需要提示用户打开应用的录音权限。
             // 如果使用本地功能（语记）需要提示用户开启语记的录音权限。
-            showTip(error.getPlainDescription(true));
+            System.out.println(error.getPlainDescription(true));
         }
 
         @Override
         public void onEndOfSpeech() {
             // 此回调表示：检测到了语音的尾端点，已经进入识别过程，不再接受语音输入
-            showTip("结束说话");
+            handler.sendMessage(Constants.createMessage(Constants.MESSAGE_LISTEN_COMPLETE));
         }
 
         @Override
@@ -194,7 +144,7 @@ public class IATService extends Service {
 
         @Override
         public void onVolumeChanged(int volume, byte[] data) {
-            showTip("当前正在说话，音量大小：" + volume);
+//            System.out.println("当前正在说话，音量大小：" + volume);
         }
 
         @Override
@@ -227,30 +177,11 @@ public class IATService extends Service {
             resultBuffer.append(mIatResults.get(key));
         }
 
-        mResultText.setText(resultBuffer.toString());
-        mResultText.setSelection(mResultText.length());
-    }
-
-    /**
-     * 听写UI监听器
-     */
-    private RecognizerDialogListener mRecognizerDialogListener = new RecognizerDialogListener() {
-        public void onResult(RecognizerResult results, boolean isLast) {
-            printResult(results);
-        }
-
-        /**
-         * 识别回调错误.
-         */
-        public void onError(SpeechError error) {
-            showTip(error.getPlainDescription(true));
-        }
-
-    };
-
-    private void showTip(final String str) {
-        mToast.setText(str);
-        mToast.show();
+        Message msg = new Message();
+        msg.what = Constants.MESSAGE_LISTEN_RESULT;
+        msg.obj = resultBuffer;
+        handler.sendMessage(msg);
+//        System.out.println(resultBuffer.toString());
     }
 
     public void setParam() {

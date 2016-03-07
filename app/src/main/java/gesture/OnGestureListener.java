@@ -4,7 +4,7 @@ import android.view.MotionEvent;
 
 public interface OnGestureListener {
 
-    public boolean onDown(MotionEvent ev);
+    public boolean onSingleClick(MotionEvent ev);
 
     public boolean onDoubleClick(MotionEvent ev);
 

@@ -8,7 +8,7 @@ import android.view.MotionEvent;
 public class MyGestureAdapter implements OnGestureListener {
 
     @Override
-    public boolean onDown(MotionEvent ev) {
+    public boolean onSingleClick(MotionEvent ev) {
         return false;
     }
 

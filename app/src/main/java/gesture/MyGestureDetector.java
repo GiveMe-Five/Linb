@@ -221,9 +221,9 @@ public class MyGestureDetector {
                         mHandler.removeMessages(TAP);
                     } else if(distance <= mTouchSlopSquare){
                         //single click
-//onDown
+//onSingleClick
                         if(!mInLongPress)
-//						mListener.onDown(ev);
+//						mListener.onSingleClick(ev);
                             mHandler.sendEmptyMessageDelayed(SINGLE_CLICK, DOUBLE_TAP_TIMEOUT);
                         else {
                             mHandler.removeMessages(TAP);
@@ -283,7 +283,7 @@ public class MyGestureDetector {
     }
 
     private void dispatchSingleClick(){
-        mListener.onDown(mCurrentDownEvent);
+        mListener.onSingleClick(mCurrentDownEvent);
     }
 
     private Context context;

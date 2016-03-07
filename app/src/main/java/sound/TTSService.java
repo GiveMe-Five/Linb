@@ -5,13 +5,14 @@ package sound;
  */
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.os.Handler;
-import android.os.Message;
 
 import com.iflytek.cloud.ErrorCode;
 import com.iflytek.cloud.SpeechConstant;
@@ -40,6 +41,7 @@ public class TTSService extends Service {
 
     //sound
     public SpeechSynthesizer mTts;
+    private AudioManager audiomanager;
     private Handler handler;
     private String defaultVoicer = "xiaoyan";
     private String defaultSpeed = "50";
@@ -51,64 +53,13 @@ public class TTSService extends Service {
         public void onInit(int code) {
             if (code != ErrorCode.SUCCESS) {
                 System.out.println("init error");
-            } else {
-                // 初始化成功，之后可以调用startSpeaking方法
-                // 注：有的开发者在onCreate方法中创建完合成对象之后马上就调用startSpeaking进行合成，
-                // 正确的做法是将onCreate中的startSpeaking调用移至这里
             }
-        }
-    };
-
-    private SynthesizerListener mTtsListener = new SynthesizerListener() {
-
-        @Override
-        public void onSpeakBegin() {
-            handler.sendMessage(createMessage(Constants.MESSAGE_START));
-        }
-
-        @Override
-        public void onSpeakPaused() {
-            System.out.println("天哪为什么会这样");
-        }
-
-        @Override
-        public void onSpeakResumed() {
-            System.out.println("wocao");
-        }
-
-        @Override
-        public void onBufferProgress(int percent, int beginPos, int endPos,
-                                     String info) {
-            // 合成进度
-        }
-
-        @Override
-        public void onSpeakProgress(int percent, int beginPos, int endPos) {
-            // 播放进度
-        }
-
-        @Override
-        public void onCompleted(SpeechError error) {
-            if (mannual)
-                handler.sendMessage(createMessage(Constants.MESSAGE_STOP));
-            else
-                handler.sendMessage(createMessage(Constants.MESSAGE_END));
-            mannual = false;
-        }
-
-        @Override
-        public void onEvent(int eventType, int arg1, int arg2, Bundle obj) {
-            // 以下代码用于获取与云端的会话id，当业务出错时将会话id提供给技术支持人员，可用于查询会话日志，定位出错原因
-            // 若使用本地能力，会话id为null
-            //	if (SpeechEvent.EVENT_SESSION_ID == eventType) {
-            //		String sid = obj.getString(SpeechEvent.KEY_EVENT_SESSION_ID);
-            //		Log.d(TAG, "session id =" + sid);
-            //	}
         }
     };
 
     public void initialize(Handler handler) {
         mTts = SpeechSynthesizer.createSynthesizer(TTSService.this, mTtsInitListener);
+        audiomanager = (AudioManager)TTSService.this.getSystemService(Context.AUDIO_SERVICE);
         this.handler = handler;
         setParam();
     }
@@ -143,37 +94,87 @@ public class TTSService extends Service {
 
     public void speechPause() {
         mTts.pauseSpeaking();
-//        while (mTts.isSpeaking()) System.out.println(mTts.isSpeaking());
-//        new Thread(){
-//            @Override
-//            public void run(){
-//                while (mTts.isSpeaking());
-////                    System.out.println(mTts.isSpeaking());
-//                handler.sendMessage(createMessage(Constants.MESSAGE_PAUSE));
-//            }
-//        }.start();
+        new Thread(){
+            @Override
+            public void run(){
+                while (audiomanager.isMusicActive());
+                handler.sendMessage(Constants.createMessage(Constants.MESSAGE_SPEECH_PAUSE));
+            }
+        }.start();
     }
 
     public void speechResume() {
         mTts.resumeSpeaking();
-//        new Thread(){
-//            @Override
-//            public void run(){
-//                while (!mTts.isSpeaking());
-//                handler.sendMessage(createMessage(Constants.MESSAGE_RESUME));
-//            }
-//        }.start();
+        new Thread(){
+            @Override
+            public void run(){
+                while (!audiomanager.isMusicActive());
+                handler.sendMessage(Constants.createMessage(Constants.MESSAGE_SPEECH_RESUME));
+            }
+        }.start();
     }
 
-    private boolean mannual = false;
-    public void speechStop() {
-        mannual = true;
+    public void speechStop(){
         mTts.stopSpeaking();
+        new Thread(){
+            @Override
+            public void run(){
+                while (mTts.isSpeaking());
+                handler.sendMessage(Constants.createMessage(Constants.MESSAGE_SPEECH_STOP));
+            }
+        }.start();
     }
 
-    private Message createMessage(int what){
-        Message msg = new Message();
-        msg.what = what;
-        return msg;
+    public void speechDestroySilence(){
+        mTts.stopSpeaking();
+        new Thread(){
+            @Override
+            public void run(){
+                while (mTts.isSpeaking());
+                handler.sendMessage(Constants.createMessage(Constants.MESSAGE_SPEECH_DESTROY));
+            }
+        }.start();
     }
+
+    private SynthesizerListener mTtsListener = new SynthesizerListener() {
+
+        @Override
+        public void onSpeakBegin() {
+            handler.sendMessage(Constants.createMessage(Constants.MESSAGE_SPEECH_START));
+        }
+
+        @Override
+        public void onSpeakPaused() {
+        }
+
+        @Override
+        public void onSpeakResumed() {
+        }
+
+        @Override
+        public void onBufferProgress(int percent, int beginPos, int endPos,
+                                     String info) {
+            // 合成进度
+        }
+
+        @Override
+        public void onSpeakProgress(int percent, int beginPos, int endPos) {
+            // 播放进度
+        }
+
+        @Override
+        public void onCompleted(SpeechError error) {
+            handler.sendMessage(Constants.createMessage(Constants.MESSAGE_SPEECH_END));
+        }
+
+        @Override
+        public void onEvent(int eventType, int arg1, int arg2, Bundle obj) {
+            // 以下代码用于获取与云端的会话id，当业务出错时将会话id提供给技术支持人员，可用于查询会话日志，定位出错原因
+            // 若使用本地能力，会话id为null
+            //	if (SpeechEvent.EVENT_SESSION_ID == eventType) {
+            //		String sid = obj.getString(SpeechEvent.KEY_EVENT_SESSION_ID);
+            //		Log.d(TAG, "session id =" + sid);
+            //	}
+        }
+    };
 }

@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="news_color">#ff6666</color>
+    <color name="white">#ffffffff</color>
+    <color name="black">#ff000000</color>
+    <color name="night">#ff202020</color>
+    <color name="cloud">#ffecf0f1</color>
+    <color name="silver">#ffbdc3c7</color>
+    <color name="concrete">#ff95a5a6</color>
+    <color name="asbestos">#ff7f8c8d</color>
+
+    <color name="light_blue">#ff3498db</color>
+    <color name="dark_blue">#ff2980b9</color>
+    <color name="light_green">#ff2ecc71</color>
+    <color name="dark_green">#ff27ae60</color>
+    <color name="light_red">#ffe74c3c</color>
+    <color name="dark_red">#ffc0392b</color>
+    <color name="light_yellow">#fff1c40f</color>
+    <color name="dark_yellow">#fff39c12</color>
 
 </resources>

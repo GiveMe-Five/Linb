@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="play">&#xf144;</string>
+
+    <string name="pause">&#xf28b;</string>
+    <!--&#xf28c;-->
+    <string name="stop">&#xf28d;</string>
+    <!--&#xf28e;-->
+    <string name="step_forward">&#xf13a;</string>
+    <string name="step_backward">&#xf139;</string>
+    <string name="news">&#xf1ea;</string>
+
+    <string name="loading">&#xf110;</string>
+    <string name="replay">&#xf01e;</string>
+
+    <string name="microphone">&#xf130;</string>
+    <string name="wait">&#xf251;</string>
+</resources>
